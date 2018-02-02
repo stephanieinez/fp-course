@@ -17,7 +17,7 @@ Useful Functions --
 
   getArgs :: IO (List Chars)
   putStrLn :: Chars -> IO ()
-  readFile :: FilePath -> IO Chars
+  readFile :: Chars -> IO Chars
   lines :: Chars -> List Chars
   void :: IO a -> IO ()
 
@@ -58,7 +58,7 @@ To test this module, load ghci in the root of the project directory, and do
 Example output:
 
 $ ghci
-GHCi, version ... 
+GHCi, version ...
 Loading package...
 Loading ...
 [ 1 of 28] Compiling (etc...
@@ -80,15 +80,20 @@ the contents of c
 main ::
   IO ()
 main =
-  error "todo: Course.FileIO#main"
-
+  do a <- getArgs
+     case a of
+          Nil -> putStrLn "pass args silly"
+          h :. _ -> run h
 -- Given a file name, read it and for each line in that file, read and print contents of each.
 -- Use @getFiles@ and @printFiles@.
 run ::
   FilePath
   -> IO ()
 run =
-  error "todo: Course.FileIO#run"
+  \name ->
+    do c <- readFile name
+       q <- getFiles (lines c)
+       printFiles q
 
 -- Given a list of file names, return list of (file name and file contents).
 -- Use @getFile@.
@@ -96,7 +101,7 @@ getFiles ::
   List FilePath
   -> IO (List (FilePath, Chars))
 getFiles =
-  error "todo: Course.FileIO#getFiles"
+  \list -> sequence (getFile <$> list)
 
 -- Given a file name, return (file name and file contents).
 -- Use @readFile@.
@@ -104,7 +109,11 @@ getFile ::
   FilePath
   -> IO (FilePath, Chars)
 getFile =
-  error "todo: Course.FileIO#getFile"
+  \name ->
+   do c <- readFile name
+      return (name, c)
+
+-- lift2 (<$>) (,) readFile
 
 -- Given a list of (file name and file contents), print each.
 -- Use @printFile@.
@@ -112,7 +121,8 @@ printFiles ::
   List (FilePath, Chars)
   -> IO ()
 printFiles =
-  error "todo: Course.FileIO#printFiles"
+  \list -> void (sequence ((uncurry printFile) <$> list))
+-- void . sequence . (<$>) (uncurry printFile)
 
 -- Given the file name, and file contents, print them.
 -- Use @putStrLn@.
@@ -120,5 +130,6 @@ printFile ::
   FilePath
   -> Chars
   -> IO ()
-printFile =
-  error "todo: Course.FileIO#printFile"
+printFile name contents =
+    putStrLn ("========" ++ name) >>= \_ ->
+    putStrLn contents

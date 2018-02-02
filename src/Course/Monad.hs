@@ -27,54 +27,6 @@ class Applicative f => Monad f where
 
 infixr 1 =<<
 
--- | Binds a function on the ExactlyOne monad.
---
--- >>> (\x -> ExactlyOne(x+1)) =<< ExactlyOne 2
--- ExactlyOne 3
-instance Monad ExactlyOne where
-  (=<<) ::
-    (a -> ExactlyOne b)
-    -> ExactlyOne a
-    -> ExactlyOne b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ExactlyOne"
-
--- | Binds a function on a List.
---
--- >>> (\n -> n :. n :. Nil) =<< (1 :. 2 :. 3 :. Nil)
--- [1,1,2,2,3,3]
-instance Monad List where
-  (=<<) ::
-    (a -> List b)
-    -> List a
-    -> List b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance List"
-
--- | Binds a function on an Optional.
---
--- >>> (\n -> Full (n + n)) =<< Full 7
--- Full 14
-instance Monad Optional where
-  (=<<) ::
-    (a -> Optional b)
-    -> Optional a
-    -> Optional b
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance Optional"
-
--- | Binds a function on the reader ((->) t).
---
--- >>> ((*) =<< (+10)) 7
--- 119
-instance Monad ((->) t) where
-  (=<<) ::
-    (a -> ((->) t b))
-    -> ((->) t a)
-    -> ((->) t b)
-  (=<<) =
-    error "todo: Course.Monad (=<<)#instance ((->) t)"
-
 -- | Witness that all things with (=<<) and (<$>) also have (<*>).
 --
 -- >>> ExactlyOne (+10) <**> ExactlyOne 8
@@ -116,6 +68,55 @@ instance Monad ((->) t) where
 
 infixl 4 <**>
 
+-- | Binds a function on the ExactlyOne monad.
+--
+-- >>> (\x -> ExactlyOne(x+1)) =<< ExactlyOne 2
+-- ExactlyOne 3
+instance Monad ExactlyOne where
+  (=<<) ::
+    (a -> ExactlyOne b)
+    -> ExactlyOne a
+    -> ExactlyOne b
+  (=<<) =
+    error "todo: Course.Monad (=<<)#instance ExactlyOne"
+
+-- | Binds a function on a List.
+--
+-- >>> (\n -> n :. n :. Nil) =<< (1 :. 2 :. 3 :. Nil)
+-- [1,1,2,2,3,3]
+instance Monad List where
+  (=<<) ::
+    (a -> List b)
+    -> List a
+    -> List b
+  (=<<) =
+    error "todo: Course.Monad (=<<)#instance List"
+
+-- | Binds a function on an Optional.
+--
+-- >>> (\n -> Full (n + n)) =<< Full 7
+-- Full 14
+instance Monad Optional where
+  (=<<) ::
+    (a -> Optional b)
+    -> Optional a
+    -> Optional b
+  (=<<) =
+    bindOptional
+
+-- | Binds a function on the reader ((->) t).
+--
+-- >>> ((*) =<< (+10)) 7
+-- 119
+instance Monad ((->) t) where
+  (=<<) ::
+    (a -> t -> b)
+    -> (t -> a)
+    -> t
+    -> b
+
+  (=<<) = \a2t2b t2a t -> (a2t2b (t2a t) t)
+
 -- | Flattens a combined structure to a single structure.
 --
 -- >>> join ((1 :. 2 :. 3 :. Nil) :. (1 :. 2 :. Nil) :. Nil)
@@ -133,8 +134,7 @@ join ::
   Monad f =>
   f (f a)
   -> f a
-join =
-  error "todo: Course.Monad#join"
+join = (=<<) id
 
 -- | Implement a flipped version of @(=<<)@, however, use only
 -- @join@ and @(<$>)@.
@@ -148,7 +148,7 @@ join =
   -> (a -> f b)
   -> f b
 (>>=) =
-  error "todo: Course.Monad#(>>=)"
+  flip (=<<)
 
 infixl 1 >>=
 
@@ -163,8 +163,8 @@ infixl 1 >>=
   -> (a -> f b)
   -> a
   -> f c
-(<=<) =
-  error "todo: Course.Monad#(<=<)"
+
+(<=<) = \b2fc a2fb a -> a2fb a >>= b2fc
 
 infixr 1 <=<
 
